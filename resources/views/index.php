@@ -53,7 +53,7 @@
               event.preventDefault();
               var row = $(this).closest('tr');
               var url = $(this).attr('href');
-              var id = row.attr('id');
+              var id = row.data('group');
               $.post( url, {id: id}, function(){
                   row.remove();
               } );
@@ -95,7 +95,7 @@
         </div>
     <?php endif; ?>
     <p>
-        <?php if(!isset($group)) : ?>
+        <?php if(empty($group)) : ?>
         <form class="form-inline form-import" method="POST" action="<?= action('\Barryvdh\TranslationManager\Controller@postImport') ?>" data-remote="true" role="form">
             <input type="hidden" name="_token" value="<?php echo csrf_token(); ?>">
             <select name="replace" class="form-control">
@@ -109,8 +109,8 @@
             <button type="submit" class="btn btn-info" data-disable-with="Searching.." >Find translations in files</button>
         </form>
         <?php endif; ?>
-        <?php if(isset($group)) : ?>
-            <form class="form-inline form-publish" method="POST" action="<?= action('\Barryvdh\TranslationManager\Controller@postPublish', $group) ?>" data-remote="true" role="form" data-confirm="Are you sure you want to publish the translations group '<?= $group ?>? This will overwrite existing language files.">
+        <?php if(!empty($group)) : ?>
+            <form class="form-inline form-publish" method="POST" action="<?= action('\Barryvdh\TranslationManager\Controller@postPublish', str_replace('/','.',$group)) ?>" data-remote="true" role="form" data-confirm="Are you sure you want to publish the translations group '<?= $group ?>? This will overwrite existing language files.">
                 <input type="hidden" name="_token" value="<?php echo csrf_token(); ?>">
                 <button type="submit" class="btn btn-info" data-disable-with="Publishing.." >Publish translations</button>
             </form>
@@ -121,13 +121,13 @@
         <div class="form-group">
             <select name="group" id="group" class="form-control group-select">
                 <?php foreach($groups as $key => $value): ?>
-                    <option value="<?= $key ?>"<?= $key == $group ? ' selected':'' ?>><?= $value ?></option>
+                    <option value="<?= str_replace('/','.',$key) ?>"<?= $key == $group ? ' selected':'' ?>><?= $value ?></option>
                 <?php endforeach; ?>
             </select>
         </div>
     </form>
     <?php if($group): ?>
-        <form action="<?= action('\Barryvdh\TranslationManager\Controller@postAdd', array($group)) ?>" method="POST"  role="form">
+        <form action="<?= action('\Barryvdh\TranslationManager\Controller@postAdd', array(str_replace('/','.',$group))) ?>" method="POST"  role="form">
             <input type="hidden" name="_token" value="<?php echo csrf_token(); ?>">
             <textarea class="form-control" rows="3" name="keys" placeholder="Add 1 key per line, without the group prefix"></textarea>
             <input type="submit" value="Add keys" class="btn btn-primary">
@@ -149,7 +149,7 @@
         <tbody>
 
         <?php foreach($translations as $key => $translation): ?>
-            <tr id="<?= $key ?>">
+            <tr id="<?= $key ?>" data-group="<?= str_replace('/','.',$group) ?>">
                 <td><?= $key ?></td>
                 <?php foreach($locales as $locale): ?>
                     <?php $t = isset($translation[$locale]) ? $translation[$locale] : null?>
@@ -160,7 +160,7 @@
                 <?php endforeach; ?>
                 <?php if($deleteEnabled): ?>
                     <td>
-                        <a href="<?= action('\Barryvdh\TranslationManager\Controller@postDelete', [$group, $key]) ?>" class="delete-key" data-confirm="Are you sure you want to delete the translations for '<?= $key ?>?"><span class="glyphicon glyphicon-trash"></span></a>
+                        <a href="<?= action('\Barryvdh\TranslationManager\Controller@postDelete', [str_replace('/','.',$group), $key]) ?>" class="delete-key" data-confirm="Are you sure you want to delete the translations for '<?= $key ?>?"><span class="glyphicon glyphicon-trash"></span></a>
                     </td>
                 <?php endif; ?>
             </tr>

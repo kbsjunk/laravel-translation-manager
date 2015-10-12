@@ -17,6 +17,7 @@ class Controller extends BaseController
 
     public function getIndex($group = null)
     {
+		$group = str_replace('.', '/', $group);
         $locales = $this->loadLocales();
         $groups = Translation::groupBy('group');
         $excludedGroups = $this->manager->getConfig('exclude_groups');
@@ -30,7 +31,6 @@ class Controller extends BaseController
         }
         $groups = [''=>'Choose a group'] + $groups;
         $numChanged = Translation::where('group', $group)->where('status', Translation::STATUS_CHANGED)->count();
-
 
         $allTranslations = Translation::where('group', $group)->orderBy('key', 'asc')->get();
         $numTranslations = count($allTranslations);
@@ -46,7 +46,7 @@ class Controller extends BaseController
             ->with('group', $group)
             ->with('numTranslations', $numTranslations)
             ->with('numChanged', $numChanged)
-            ->with('editUrl', action('\Barryvdh\TranslationManager\Controller@postEdit', [$group]))
+            ->with('editUrl', action('\Barryvdh\TranslationManager\Controller@postEdit', [str_replace('/','.',$group)]))
             ->with('deleteEnabled', $this->manager->getConfig('delete_enabled'));
     }
 
@@ -68,6 +68,7 @@ class Controller extends BaseController
 
     public function postAdd(Request $request, $group)
     {
+		$group = str_replace('.', '/', $group);
         $keys = explode("\n", $request->get('keys'));
 
         foreach($keys as $key){
@@ -81,6 +82,7 @@ class Controller extends BaseController
 
     public function postEdit(Request $request, $group)
     {
+		$group = str_replace('.', '/', $group);
         if(!in_array($group, $this->manager->getConfig('exclude_groups'))) {
             $name = $request->get('name');
             $value = $request->get('value');
@@ -100,6 +102,7 @@ class Controller extends BaseController
 
     public function postDelete($group, $key)
     {
+		$group = str_replace('.', '/', $group);
         if(!in_array($group, $this->manager->getConfig('exclude_groups')) && $this->manager->getConfig('delete_enabled')) {
             Translation::where('group', $group)->where('key', $key)->delete();
             return ['status' => 'ok'];
@@ -123,6 +126,7 @@ class Controller extends BaseController
 
     public function postPublish($group)
     {
+		$group = str_replace('.', '/', $group);
         $this->manager->exportTranslations($group);
 
         return ['status' => 'ok'];
