@@ -20,6 +20,16 @@
     <script>
         jQuery(document).ready(function($){
 
+            $.fn.editableform.buttons = '<button type="submit" class="btn btn-xs btn-primary editable-submit">OK</button>'+
+                                        '<button type="button" class="btn btn-xs btn-default editable-cancel">Cancel</button>'+
+                                        '&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;<button type="button" class="btn btn-xs btn-default editable-auto">Automatic</button>';
+
+            // $.fn.editableform.template = '<form class="form-inline editableform">'+
+                                        // '<div class="control-group">'+
+                                        // '<div><div class="editable-input"></div><div class="editable-buttons"></div></div>'+
+                                        // '<div class="editable-error-block"></div>'+
+                                        // '</div></form>';
+
             $.ajaxSetup({
                 beforeSend: function(xhr, settings) {
                     console.log('beforesend');
@@ -27,7 +37,9 @@
                 }
             });
 
-            $('.editable').editable().on('hidden', function(e, reason){
+            $('.editable').editable({
+                showbuttons: 'bottom'
+            }).on('hidden', function(e, reason){
                 var locale = $(this).data('locale');
                 if(reason === 'save'){
                     $(this).removeClass('status-0').addClass('status-1');
@@ -155,7 +167,7 @@
                     <?php $t = isset($translation[$locale]) ? $translation[$locale] : null?>
 
                     <td>
-                        <a href="#edit" class="editable status-<?= $t ? $t->status : 0 ?> locale-<?= $locale ?>" data-locale="<?= $locale ?>" data-name="<?= $locale . "|" . $key ?>" id="username" data-type="textarea" data-pk="<?= $t ? $t->id : 0 ?>" data-url="<?= $editUrl ?>" data-title="Enter translation"><?= $t ? htmlentities($t->value, ENT_QUOTES, 'UTF-8', false) : '' ?></a>
+                        <a href="#edit" class="editable status-<?= $t ? $t->status : 0 ?> locale-<?= $locale ?>" data-locale="<?= $locale ?>" data-name="<?= $locale . "|" . $key ?>" id="username" data-type="<?php echo $t ? strlen($t->value) > 20 ? 'textarea' : 'text' : 'textarea'; ?>" data-pk="<?= $t ? $t->id : 0 ?>" data-url="<?= $editUrl ?>" data-title="Enter translation"><?= $t ? htmlentities($t->value, ENT_QUOTES, 'UTF-8', false) : '' ?></a>
                     </td>
                 <?php endforeach; ?>
                 <?php if($deleteEnabled): ?>
