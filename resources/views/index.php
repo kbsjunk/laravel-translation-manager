@@ -24,11 +24,6 @@
                                         '<button type="button" class="btn btn-xs btn-default editable-cancel">Cancel</button>'+
                                         '&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;<button type="button" class="btn btn-xs btn-default editable-auto">Automatic</button>';
 
-            // $.fn.editableform.template = '<form class="form-inline editableform">'+
-                                        // '<div class="control-group">'+
-                                        // '<div><div class="editable-input"></div><div class="editable-buttons"></div></div>'+
-                                        // '<div class="editable-error-block"></div>'+
-                                        // '</div></form>';
 
             $.ajaxSetup({
                 beforeSend: function(xhr, settings) {
@@ -84,6 +79,21 @@
             $('.form-publish').on('ajax:success', function (e, data) {
                 $('div.success-publish').slideDown();
             });
+
+            $('body').on('click', '.editable-auto', function(event) {
+              
+              event.preventDefault();
+              var row = $(this).closest('tr');
+              var url = "<?= action('ApiController@translateWord') ?>";
+              var group = row.data('group');
+              var key = row.attr('id');
+              var lang = $(this).closest('.popover').prev('.editable').data('locale');
+              var input = $(this).closest('.editable-buttons').prev('.editable-input').find('input,textarea');
+
+              $.post( url, {group: group, key: key, lang: lang}, function(data){
+                    $(input).val(word);
+              } );
+          });
 
         })
     </script>
