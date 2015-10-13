@@ -91,7 +91,7 @@
               var input = $(this).closest('.editable-buttons').prev('.editable-input').find('input,textarea');
 
               $.post( url, {group: group, key: key, lang: lang}, function(data){
-                    $(input).val(word);
+                    $(input).val(data.word);
               } );
           });
 
