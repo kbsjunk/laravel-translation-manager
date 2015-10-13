@@ -146,7 +146,7 @@ class Manager{
                 if(isset($groups[$group])){
                     $translations = $groups[$group];
 					$dir = dirname($this->app->langPath().'/'.$locale.'/'.$group);
-					$this->files->makeDirectory($dir, 0755, true, true);
+					$this->files->makeDirectory($dir, 0777, true, true);
                     $path = $this->app->langPath().'/'.$locale.'/'.$group.'.php';
                     $output = "<?php\n\nreturn ".var_export($translations, true).";\n";
                     $this->files->put($path, $output);
