@@ -4,7 +4,12 @@
 @section('subtitle', $group)
 
 @section('content')
-<p>Warning, translations are not visible until they are exported back to the app/lang file, using the <tt>php artisan translation:export</tt> command or publish button.</p>
+<div class="panel-unstyled">
+	<p>Warning, translations are not visible until they are exported back to the app/lang file, using the <tt>php artisan translation:export</tt> command or publish button.</p>
+	@if(empty($group))
+	<p>Choose a group to display the group translations. If no groups are visisble, make sure you have run the migrations and imported the translations.</p>
+	@endif
+</div>
 <div class="row">
 	<div class="col-md-8 col-md-offset-2">
 		<div class="alert alert-success success-import fade in" style="display:none;">
@@ -44,44 +49,72 @@
 					</select>
 				</form>
 				@if(!empty($group))
-				<form class="form-inline form-publish" method="POST" action="{{ action('\Barryvdh\TranslationManager\Controller@postPublish', str_replace('/','.',$group)) }}" data-remote="true" role="form" data-confirm="Are you sure you want to publish the translations group '{{ $group }}? This will overwrite existing language files.">
-					<input type="hidden" name="_token" value="{{ csrf_token() }}">
-					<button type="submit" class="btn btn-primary" data-disable-with="Publishing.." >Publish translations</button>
-				</form>
+				<br>
+				<table class="table table-condensed">
+					<tbody>
+						<tr>
+							<th class="col-sm-10">Keys</th> <td class="col-sm-2 text-center">{{ $numKeys }}</td>
+						</tr>
+						<tr>
+							<th>Locales</th> <td class="text-center">{{ count($locales) }}</td>
+						</tr>
+						<tr>
+							<th>Translations</th> <td class="text-center">{{ $numTranslations }}</td>
+						</tr>
+						<tr>
+							<th>Translated</th> <td class="text-center">{{ $numTranslated }}</td>
+						</tr>
+						<tr>
+							<th>Changed/ Unpublished</th> <td class="text-center"><strong>{{ $numChanged }}</strong></td>
+						</tr>
+					</tbody>
+				</table>
+				<div class="panel-footer">
+					<form class="form-inline form-publish" method="POST" action="{{ action('\Barryvdh\TranslationManager\Controller@postPublish', str_replace('/','.',$group)) }}" data-remote="true" role="form" data-confirm="Are you sure you want to publish the translations group '{{ $group }}? This will overwrite existing language files.">
+						<input type="hidden" name="_token" value="{{ csrf_token() }}">
+						<button type="submit" class="btn btn-primary" data-disable-with="Publishing.." >Publish translations</button>
+						<a href="{{ action('\Barryvdh\TranslationManager\Controller@getIndex') }}" class="btn btn-default">Import</a>
+					</form>
+				</div>
 				@endif
 			</div>
 			@if($group)
 			<div class="col-md-6">
-				<legend>
-					Translation Keys
-				</legend>
+				<br class="hidden-md hidden-lg">
 				<form action="{{ action('\Barryvdh\TranslationManager\Controller@postAdd', array(str_replace('/','.',$group))) }}" method="POST"  role="form">
+					<legend>
+						Translation Keys
+					</legend>
 					<input type="hidden" name="_token" value="{{ csrf_token() }}">
-					<div class="input-group">
-						<textarea class="form-control checkbox-sm" rows="4" name="keys" placeholder="Add 1 key per line, without the group prefix"></textarea>
-						<span class="input-group-btn" style="vertical-align:top;">
-							<input type="submit" value="Add keys" class="btn btn-default">
-						</span>
+					<textarea class="form-control input-sm" rows="4" name="keys" placeholder="Add 1 key per line, without the group prefix"></textarea>
+					<div class="panel-footer unstyled">
+						<input type="submit" value="Add keys" class="btn btn-default">
 					</div>
 				</form>
 			</div>
 			<div class="col-md-2">
-				<legend>
-					Languages
-				</legend>
-				@foreach($locales as $locale)
-				<th>
+				<form class="form-show-locales" method="POST" action="{{ action('\Barryvdh\TranslationManager\Controller@postLocales') }}" data-remote="true" role="form">
+					<br class="hidden-md hidden-lg">
+					<legend>
+						Languages
+					</legend>
+					<input type="hidden" name="_token" value="{{ csrf_token() }}">
+					@foreach($locales as $locale)
 					<div class="checkbox">
 						<label>
-							<input type="checkbox" checked class="checkbox-sm" value="{{ $locale }}" data-hide-locale>
-							<span>{{ Punic\Language::getName($locale, $locale) }}</span>
+							<input type="checkbox" name="show_locales[]" class="checkbox-sm" value="{{ $locale }}" data-hide-locale{{ in_array($locale, $show_locales) ? ' checked' : null }}>
+							<span>{{ sentence_case(Punic\Language::getName($locale, $locale)) }}</span>
 						</label>
 					</div>
-				</th>
-				@endforeach
+					@endforeach
+					<div class="panel-footer">
+						<a href="{{ action('LanguagesController@create') }}" class="btn btn-default">Add languages</a>
+					</div>
+				</form>
 			</div>
 			@else
 			<div class="col-md-8">
+				<br class="hidden-md hidden-lg">
 				<legend>
 					Import Translation Keys
 				</legend>
@@ -117,52 +150,53 @@
 
 	</div>
 </div>
-@if($group)
-<h4>Total: {{ $numTranslations }}, changed: {{ $numChanged }}</h4>
-<div class="panel panel-default">
-	<div class="table-responsive">
-		<table class="table table-bordered">
-			<thead>
-				<tr>
-					<th width="15%">Key</th>
-					@foreach($locales as $locale)
-					<th data-locale-column="{{ $locale }}">
-						<span>{{ Punic\Language::getName($locale, $locale) }}</span>
-					</th>
+</div><!-- .container -->
+<div class="container-fluid">
+	@if($group)
+	<h4 class="page-header">
+		Translations
+	</h4>
+	<div class="panel panel-default">
+		<div class="table-responsive">
+			<table class="table table-bordered">
+				<thead>
+					<tr>
+						<th width="15%">Key</th>
+						@foreach($locales as $locale)
+						<th data-locale-column="{{ $locale }}"{!! in_array($locale, $show_locales) ? null : ' style="display:none;"' !!}>
+							<span>{{ sentence_case(Punic\Language::getName($locale, $locale)) }}</span>
+						</th>
+						@endforeach
+						@if($deleteEnabled)
+						<th width="20">&nbsp;</th>
+						@endif
+					</tr>
+				</thead>
+				<tbody>
+					@foreach($translations as $key => $translation)
+					<tr id="{{ $key }}" data-group="{{ str_replace('/','.',$group) }}">
+						<td>{{ $key }}</td>
+						@foreach($locales as $locale)
+						<?php $t = isset($translation[$locale]) ? $translation[$locale] : null; ?>
+						<td data-locale-column="{{ $locale }}"{!! in_array($locale, $show_locales) ? null : ' style="display:none;"' !!}>
+							<a href="#edit" class="editable status-{{ $t ? $t->status : 0 }} locale-{{ $locale }}" data-locale="{{ $locale }}" data-name="{{ $locale . "|" . $key }}" id="username" data-type="{{ $t ? strlen($t->value) > 20 ? 'textarea' : 'text' : 'textarea' }}"  data-pk="{{ $t ? $t->id : 0 }}" data-url="{{ $editUrl }}" data-title="Enter translation">{{ $t ? htmlentities($t->value, ENT_QUOTES, 'UTF-8', false) : '' }}</a>
+						</td>
+						@endforeach
+						@if($deleteEnabled)
+						<td>
+							<a href="{{ action('\Barryvdh\TranslationManager\Controller@postDelete', [str_replace('/','.',$group), $key]) }}" class="btn btn-link btn-sm delete-key" data-confirm="Are you sure you want to delete the translations for '{{ $key }}?"><i class="fa fa-trash"></i></a>
+						</td>
+						@endif
+					</tr>
 					@endforeach
-					@if($deleteEnabled)
-					<th width="20">&nbsp;</th>
-					@endif
-				</tr>
-			</thead>
-			<tbody>
 
-				@foreach($translations as $key => $translation)
-				<tr id="{{ $key }}" data-group="{{ str_replace('/','.',$group) }}">
-					<td>{{ $key }}</td>
-					@foreach($locales as $locale)
-					<?php $t = isset($translation[$locale]) ? $translation[$locale] : null; ?>
-					<td data-locale-column="{{ $locale }}">
-						<a href="#edit" class="editable status-{{ $t ? $t->status : 0 }} locale-{{ $locale }}" data-locale="{{ $locale }}" data-name="{{ $locale . "|" . $key }}" id="username" data-type="{{ $t ? strlen($t->value) > 20 ? 'textarea' : 'text' : 'textarea' }}"  data-pk="{{ $t ? $t->id : 0 }}" data-url="{{ $editUrl }}" data-title="Enter translation">{{ $t ? htmlentities($t->value, ENT_QUOTES, 'UTF-8', false) : '' }}</a>
-					</td>
-					@endforeach
-					@if($deleteEnabled)
-					<td>
-						<a href="{{ action('\Barryvdh\TranslationManager\Controller@postDelete', [str_replace('/','.',$group), $key]) }}" class="btn btn-link btn-sm delete-key" data-confirm="Are you sure you want to delete the translations for '{{ $key }}?"><i class="fa fa-trash"></i></a>
-					</td>
-					@endif
-				</tr>
-				@endforeach
-
-			</tbody>
-		</table>
+				</tbody>
+			</table>
+		</div>
 	</div>
+	@endif
 </div>
-@else
-<p>Choose a group to display the group translations. If no groups are visisble, make sure you have run the migrations and imported the translations.</p>
 
-@endif
-</div>
 @endsection
 
 @section('scripts')
@@ -172,8 +206,8 @@
 	jQuery(document).ready(function($){
 
 		$.fn.editableform.buttons = '<button type="submit" class="btn btn-xs btn-primary editable-submit">OK</button>'+
-		'<button type="button" class="btn btn-xs btn-default editable-cancel">Cancel</button>'+
-		'&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;<button type="button" class="btn btn-xs btn-default editable-auto">Automatic</button>';
+			'<button type="button" class="btn btn-xs btn-default editable-cancel">Cancel</button>'+
+			'&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;<button type="button" class="btn btn-xs btn-default editable-auto">Automatic</button>';
 
 
 		$.ajaxSetup({
@@ -235,11 +269,15 @@
 			$('div.success-publish').slideDown();
 		});
 
+		$('.form-show-locales :checkbox').on('change', function() {
+			$(this).closest('form').submit();
+		});
+
 		$('body').on('click', '.editable-auto', function(event) {
 
 			event.preventDefault();
 			var row = $(this).closest('tr');
-			var url = "{{ action('ApiController@translateWord') }}";
+			var url = "{{ action('\Barryvdh\TranslationManager\Controller@postTranslate') }}";
 			var group = row.data('group');
 			var key = row.attr('id');
 			var lang = $(this).closest('.popover').prev('.editable').data('locale');
